@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0c0a09">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>For You — Rose Day</title>
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      min-height: -webkit-fill-available;
+      background: #0c0a09;
+      font-family: 'Libre Baskerville', Georgia, serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      cursor: default;
+      position: relative;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      overscroll-behavior: none;
+      padding: 0;
+    }
+
+    /* Starry background */
+    .stars-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #fff;
+      border-radius: 50%;
+      animation: twinkle 3s ease-in-out infinite;
+    }
+
+    .star.small { width: 1px; height: 1px; }
+    .star.medium { width: 2px; height: 2px; }
+    .star.large { width: 3px; height: 3px; }
+
+    .star:nth-child(4n) { animation-delay: 0s; }
+    .star:nth-child(4n+1) { animation-delay: 0.8s; }
+    .star:nth-child(4n+2) { animation-delay: 1.6s; }
+    .star:nth-child(4n+3) { animation-delay: 2.4s; }
+
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    /* Pop-up rose overlay */
+    .popup-rose {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 180px;
+      height: 220px;
+      transform: translate(-50%, -50%);
+      z-index: 25;
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .popup-rose.show {
+      opacity: 1;
+      visibility: visible;
+      animation: rosePopUp 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      transform-origin: center center;
+    }
+
+    .popup-rose.fade-out {
+      animation: roseFadeOut 0.8s ease-out forwards;
+    }
+
+    @keyframes rosePopUp {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+      }
+      60% {
+        transform: translate(-50%, -50%) scale(1.15);
+        opacity: 1;
+      }
+      80% {
+        transform: translate(-50%, -50%) scale(0.98);
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes roseFadeOut {
+      0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 0;
+      }
+    }
+
+    .popup-rose svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 0 30px rgba(225, 29, 72, 0.4));
+    }
+
+    /* --- SEALED STATE --- */
+    .envelope-scene {
+      position: fixed;
+      inset: 0;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease, visibility 0.8s;
+      z-index: 20;
+    }
+
+    .envelope-scene.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .prompt {
+      color: #a8a29e;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .envelope {
+      width: 280px;
+      height: 180px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      touch-action: manipulation;
+    }
+
+    .envelope:hover { transform: scale(1.02); }
+
+    .envelope-flap {
+      position: absolute;
+      width: 0;
+      height: 0;
+      left: 0;
+      top: 0;
+      border-left: 140px solid transparent;
+      border-right: 140px solid transparent;
+      border-top: 90px solid #1c1917;
+      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+    }
+
+    .envelope-body {
+      position: absolute;
+      bottom: 0;
+      left: 20px;
+      width: 240px;
+      height: 140px;
+      background: linear-gradient(180deg, #292524 0%, #1c1917 100%);
+      border: 1px solid #3f3f46;
+      filter: drop-shadow(0 4px 20px rgba(0,0,0,0.5));
+    }
+
+    .seal-container {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 56px;
+      height: 56px;
+      min-width: 48px;
+      min-height: 48px;
+      z-index: 2;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .wax-seal {
+      position: absolute;
+      left: 0;
+      top: 0;
+      transform: translate(0, 0);
+      width: 56px;
+      height: 56px;
+      background: radial-gradient(circle at 35% 35%, #b91c1c, #7f1d1d);
+      border-radius: 50%;
+      box-shadow: inset -4px -4px 12px rgba(0,0,0,0.4), 0 0 0 2px rgba(185,28,28,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+      z-index: 2;
+    }
+
+    .wax-seal:hover { transform: scale(1.08); }
+
+    .wax-seal svg {
+      width: 28px;
+      height: 28px;
+      fill: rgba(255,255,255,0.9);
+    }
+
+    .wax-seal.cracked {
+      animation: sealCrack 0.6s ease-out forwards;
+    }
+
+    @keyframes sealCrack {
+      0% { transform: scale(1); opacity: 1; }
+      30% { transform: scale(1.2); }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    .seal-shards {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .seal-shard {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      left: 50%;
+      top: 50%;
+      background: #7f1d1d;
+      border-radius: 50%;
+      opacity: 0;
+    }
+
+    .seal-shard.reveal {
+      animation: shardFly 0.8s ease-out forwards;
+    }
+
+    @keyframes shardFly {
+      0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(
+          calc(-50% + var(--dx, 0px)),
+          calc(-50% + var(--dy, 0px))
+        ) scale(0.3);
+        opacity: 0;
+      }
+    }
+
+    /* --- REVEAL SCENE --- */
+    .reveal-scene {
+      position: fixed;
+      inset: 0;
+      padding: max(2rem, env(safe-area-inset-top)) max(2rem, env(safe-area-inset-right)) max(2rem, env(safe-area-inset-bottom)) max(2rem, env(safe-area-inset-left));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 1s ease 0.3s, visibility 1s;
+      z-index: 10;
+    }
+
+    .reveal-scene.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .letter {
+      background: linear-gradient(180deg, #fef3c7 0%, #fde68a 2%, #fef3c7 100%);
+      max-width: 420px;
+      padding: 2.5rem 2rem;
+      box-shadow:
+        0 0 0 1px rgba(120,53,15,0.2),
+        0 25px 50px -12px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+      position: relative;
+      transform: scale(0.8) translateY(30px);
+      opacity: 0;
+      transition: transform 1s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.8s;
+    }
+
+    .reveal-scene.visible .letter {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    .letter::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 20px,
+        rgba(120,53,15,0.1) 20px,
+        rgba(120,53,15,0.1) 21px
+      );
+    }
+
+    .for-name {
+      font-family: 'Caveat', cursive;
+      font-size: 1.8rem;
+      color: #92400e;
+      margin-bottom: 0.5rem;
+    }
+
+    .letter h1 {
+      font-size: 1.5rem;
+      color: #78350f;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    .rose-in-letter {
+      width: 140px;
+      height: 180px;
+      margin: 1rem auto;
+      position: relative;
+      animation: roseAppear 1.2s ease-out 0.5s both, roseBreathe 4s ease-in-out 2s infinite;
+    }
+
+    .rose-in-letter svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    @keyframes roseAppear {
+      0% { transform: scale(0); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes roseBreathe {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .rose-in-letter .petal-shine {
+      animation: petalShine 3s ease-in-out infinite;
+    }
+
+    @keyframes petalShine {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    .rose-in-letter .center-glow {
+      animation: centerGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes centerGlow {
+      0%, 100% { filter: drop-shadow(0 0 4px rgba(251,191,36,0.5)); }
+      50% { filter: drop-shadow(0 0 8px rgba(251,191,36,0.8)); }
+    }
+
+    .letter-text {
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: #57534e;
+      margin-top: 1.5rem;
+    }
+
+    .letter-text p {
+      margin-bottom: 0.8rem;
+    }
+
+    .handwritten {
+      font-family: 'Caveat', cursive;
+      font-size: 1.4rem;
+      color: #78350f;
+      margin-top: 1.5rem;
+      text-align: right;
+    }
+
+    /* Falling petals - sparse, intentional */
+    .floating-petal {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: radial-gradient(ellipse, #fca5a5 30%, #f87171 100%);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      pointer-events: none;
+      z-index: 5;
+      opacity: 0.6;
+    }
+
+    @keyframes gentleFall {
+      0% { transform: translateY(-5vh) rotate(0deg); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.4; }
+      100% { transform: translateY(105vh) rotate(400deg); opacity: 0; }
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 480px) {
+      .envelope {
+        transform: scale(0.85);
+        transform-origin: center center;
+      }
+
+      .envelope:hover {
+        transform: scale(0.87);
+      }
+
+      .seal-container {
+        min-width: 56px;
+        min-height: 56px;
+      }
+
+      .prompt {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+        letter-spacing: 0.1em;
+      }
+
+      .popup-rose {
+        width: min(180px, 70vw);
+        height: min(220px, 85vw);
+      }
+
+      .reveal-scene {
+        padding: 1rem;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .letter {
+        max-width: 100%;
+        padding: 1.5rem 1.25rem;
+      }
+
+      .for-name {
+        font-size: 1.5rem;
+      }
+
+      .letter h1 {
+        font-size: 1.25rem;
+      }
+
+      .rose-in-letter {
+        width: min(140px, 50vw);
+        height: min(180px, 65vw);
+      }
+
+      .letter-text {
+        font-size: 0.9rem;
+      }
+
+      .handwritten {
+        font-size: 1.2rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .envelope {
+        width: 260px;
+      }
+
+      .prompt {
+        font-size: 0.75rem;
+      }
+
+      .letter {
+        padding: 1.25rem 1rem;
+      }
+    }
+
+    @media (max-height: 600px) {
+      .envelope-scene {
+        padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+      }
+
+      .prompt {
+        margin-bottom: 0.75rem;
+      }
+
+      .reveal-scene {
+        align-items: flex-start;
+        padding-top: max(1rem, env(safe-area-inset-top));
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      }
+
+      .letter {
+        margin: auto 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Starry background -->
+  <div class="stars-bg" id="starsBg"></div>
+
+  <!-- Pop-up rose (appears on envelope click) -->
+  <div class="popup-rose" id="popupRose">
+    <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="popupPetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#e11d48" /><stop offset="40%" style="stop-color:#b91c3c" /><stop offset="100%" style="stop-color:#7f1d1d" />
+        </linearGradient>
+        <linearGradient id="popupInnerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#fca5a5" /><stop offset="50%" style="stop-color:#e11d48" /><stop offset="100%" style="stop-color:#991b1b" />
+        </linearGradient>
+        <radialGradient id="popupCenterGrad" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color:#fbbf24" /><stop offset="100%" style="stop-color:#d97706" />
+        </radialGradient>
+        <linearGradient id="popupStemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" style="stop-color:#15803d" /><stop offset="50%" style="stop-color:#22c55e" /><stop offset="100%" style="stop-color:#166534" />
+        </linearGradient>
+      </defs>
+      <path d="M70 90 Q68 140 70 180" stroke="url(#popupStemGrad)" stroke-width="5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="68" cy="140" rx="14" ry="6" fill="#22c55e" transform="rotate(-30 68 140)"/>
+      <ellipse cx="72" cy="158" rx="14" ry="6" fill="#16a34a" transform="rotate(25 72 158)"/>
+      <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#popupPetalGrad)" transform="rotate(0 70 60)"/>
+      <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#popupPetalGrad)" transform="rotate(72 70 60)"/>
+      <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#popupPetalGrad)" transform="rotate(144 70 60)"/>
+      <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#popupPetalGrad)" transform="rotate(216 70 60)"/>
+      <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#popupPetalGrad)" transform="rotate(288 70 60)"/>
+      <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#popupPetalGrad)" transform="rotate(36 70 60)"/>
+      <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#popupPetalGrad)" transform="rotate(108 70 60)"/>
+      <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#popupPetalGrad)" transform="rotate(180 70 60)"/>
+      <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#popupPetalGrad)" transform="rotate(252 70 60)"/>
+      <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#popupPetalGrad)" transform="rotate(324 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(0 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(60 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(120 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(180 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(240 70 60)"/>
+      <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#popupInnerGrad)" transform="rotate(300 70 60)"/>
+      <circle cx="70" cy="60" r="8" fill="url(#popupCenterGrad)"/>
+      <circle cx="70" cy="60" r="4" fill="#fde047" opacity="0.9"/>
+    </svg>
+  </div>
+
+  <!-- SEALED: Tap to open -->
+  <div class="envelope-scene" id="envelopeScene">
+    <p class="prompt">Tap the seal to open</p>
+    <div class="envelope">
+      <div class="envelope-flap"></div>
+      <div class="envelope-body"></div>
+      <div class="seal-container">
+        <div class="wax-seal" id="waxSeal">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </div>
+        <div class="seal-shards" id="sealShards"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- REVEAL: The letter -->
+  <div class="reveal-scene" id="revealScene">
+    <div class="letter">
+      <p class="for-name">For my love —</p>
+      <h1>Rose Day, 7th February</h1>
+
+      <div class="rose-in-letter">
+        <svg viewBox="0 0 140 180" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="petalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#e11d48;stop-opacity:1" />
+              <stop offset="40%" style="stop-color:#b91c3c;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#7f1d1d;stop-opacity:1" />
+            </linearGradient>
+            <linearGradient id="petalLight" x1="0%" y1="0%" x2="80%" y2="80%">
+              <stop offset="0%" style="stop-color:#f87171;stop-opacity:0.6" />
+              <stop offset="100%" style="stop-color:#f87171;stop-opacity:0" />
+            </linearGradient>
+            <linearGradient id="innerPetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#fca5a5;stop-opacity:1" />
+              <stop offset="50%" style="stop-color:#e11d48;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#991b1b;stop-opacity:1" />
+            </linearGradient>
+            <radialGradient id="centerGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" style="stop-color:#fbbf24;stop-opacity:1" />
+              <stop offset="100%" style="stop-color:#d97706;stop-opacity:1" />
+            </radialGradient>
+            <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:#15803d" />
+              <stop offset="50%" style="stop-color:#22c55e" />
+              <stop offset="100%" style="stop-color:#166534" />
+            </linearGradient>
+          </defs>
+          <!-- Stem -->
+          <path d="M70 90 Q68 140 70 180" stroke="url(#stemGrad)" stroke-width="5" fill="none" stroke-linecap="round"/>
+          <!-- Leaves -->
+          <ellipse cx="68" cy="140" rx="14" ry="6" fill="#22c55e" transform="rotate(-30 68 140)"/>
+          <ellipse cx="72" cy="158" rx="14" ry="6" fill="#16a34a" transform="rotate(25 72 158)"/>
+          <!-- Outer petals (back layer) -->
+          <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#petalGrad)" transform="rotate(0 70 60)"/>
+          <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#petalGrad)" transform="rotate(72 70 60)"/>
+          <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#petalGrad)" transform="rotate(144 70 60)"/>
+          <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#petalGrad)" transform="rotate(216 70 60)"/>
+          <path d="M70 45 Q50 35 40 50 Q35 65 50 75 Q70 85 70 60 Q70 50 70 45" fill="url(#petalGrad)" transform="rotate(288 70 60)"/>
+          <!-- Middle petals -->
+          <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#petalGrad)" transform="rotate(36 70 60)"/>
+          <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#petalGrad)" transform="rotate(108 70 60)"/>
+          <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#petalGrad)" transform="rotate(180 70 60)"/>
+          <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#petalGrad)" transform="rotate(252 70 60)"/>
+          <path d="M70 50 Q55 42 48 52 Q44 62 55 70 Q70 78 70 58 Q70 52 70 50" fill="url(#petalGrad)" transform="rotate(324 70 60)"/>
+          <!-- Inner petals -->
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(0 70 60)"/>
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(60 70 60)"/>
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(120 70 60)"/>
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(180 70 60)"/>
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(240 70 60)"/>
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60 Q70 56 70 55" fill="url(#innerPetalGrad)" transform="rotate(300 70 60)"/>
+          <!-- Petal highlight -->
+          <path d="M70 55 Q60 50 56 56 Q54 62 60 66 Q70 72 70 60" fill="url(#petalLight)" class="petal-shine" transform="rotate(36 70 60)" opacity="0.5"/>
+          <!-- Rose center -->
+          <circle cx="70" cy="60" r="8" fill="url(#centerGrad)" class="center-glow"/>
+          <circle cx="70" cy="60" r="4" fill="#fde047" opacity="0.9"/>
+        </svg>
+      </div>
+
+      <div class="letter-text">
+        <p>One rose for you — because one is never enough to say what you mean to me, but it's a start.</p>
+        <p>You're the reason ordinary days feel like something more. The way you [laugh / smile / exist] — I notice. And I'm grateful.</p>
+        <p>This one's just for you. No one else gets a letter like this.</p>
+      </div>
+      <p class="handwritten">— Yours</p>
+    </div>
+  </div>
+
+  <script>
+    // Create starry background
+    const starsBg = document.getElementById('starsBg');
+    const starCount = 80;
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.className = 'star';
+      const size = Math.random();
+      if (size < 0.4) star.classList.add('small');
+      else if (size < 0.8) star.classList.add('medium');
+      else star.classList.add('large');
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 100 + '%';
+      star.style.animationDelay = (Math.random() * 3) + 's';
+      starsBg.appendChild(star);
+    }
+
+    const seal = document.getElementById('waxSeal');
+    const sealContainer = seal.closest('.seal-container');
+    const envelope = document.querySelector('.envelope');
+    const envelopeScene = document.getElementById('envelopeScene');
+    const revealScene = document.getElementById('revealScene');
+    const popupRose = document.getElementById('popupRose');
+
+    let opened = false;
+    function openLetter() {
+      if (opened) return;
+      opened = true;
+      sealContainer.removeEventListener('click', openLetter);
+      seal.classList.add('cracked');
+
+      // Seal shards fly outward
+      const shards = document.getElementById('sealShards');
+      for (let i = 0; i < 8; i++) {
+        const shard = document.createElement('div');
+        shard.className = 'seal-shard';
+        const angle = (i / 8) * Math.PI * 2;
+        shard.style.setProperty('--dx', Math.cos(angle) * 80 + 'px');
+        shard.style.setProperty('--dy', Math.sin(angle) * 80 + 'px');
+        shards.appendChild(shard);
+        setTimeout(() => shard.classList.add('reveal'), 50);
+      }
+
+      // Pop-up rose animation
+      setTimeout(() => {
+        envelopeScene.classList.add('hidden');
+        popupRose.classList.add('show');
+      }, 400);
+
+      // After rose pops up, fade to letter
+      setTimeout(() => {
+        popupRose.classList.remove('show');
+        popupRose.classList.add('fade-out');
+      }, 2000);
+
+      setTimeout(() => {
+        popupRose.classList.remove('fade-out');
+        popupRose.style.display = 'none';
+        revealScene.classList.add('visible');
+      }, 2800);
+    }
+
+    sealContainer.addEventListener('click', openLetter);
+    envelope.addEventListener('click', (e) => {
+      if (e.target.closest('.seal-container')) return;
+      openLetter();
+    });
+
+    // Few, slow falling petals in reveal
+    const addFallingPetals = () => {
+      for (let i = 0; i < 6; i++) {
+        const p = document.createElement('div');
+        p.className = 'floating-petal';
+        p.style.left = (10 + i * 18) + '%';
+        p.style.animation = `gentleFall ${14 + i * 3}s linear ${i * 2}s infinite`;
+        document.body.appendChild(p);
+      }
+    };
+    setTimeout(addFallingPetals, 1500);
+  </script>
+</body>
+</html>
